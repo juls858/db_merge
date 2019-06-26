@@ -1,0 +1,34 @@
+{
+    "name": "MariaDBParameterized",
+    "type": "Microsoft.DataFactory/factories/linkedservices",
+    "properties": {
+        "type": "MariaDB",
+        "typeProperties": {
+            "connectionString": {
+                "value": "server=@{linkedService().DBServer};port=3306;database=@{linkedService().DBName};uid=@{linkedService().DBUser}",
+                "type": "SecureString"
+            },
+            "pwd": {
+                "type": "AzureKeyVaultSecret",
+                "store": {
+                    "referenceName": "AzureKeyVault1",
+                    "type": "LinkedServiceReference"
+                },
+                "secretName": "ares-mariadb-password"
+
+            }
+        },
+        "parameters": {
+            "DBName": {
+                "type": "String"
+            },
+            "DBUser": {
+                "type": "String"
+            },
+            "DBServer": {
+                "type": "String"
+            }
+          }
+      }
+
+    }

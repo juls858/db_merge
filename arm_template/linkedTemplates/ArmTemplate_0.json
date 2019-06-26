@@ -1,0 +1,559 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory Name",
+            "defaultValue": "daren-test"
+        },
+        "AresMigrationSink_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AresMigrationSink'"
+        },
+        "MariaDB1_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'MariaDB1'"
+        },
+        "AzureKeyVault1_properties_typeProperties_baseUrl": {
+            "type": "string",
+            "defaultValue": "https://MachineIntelligence.vault.azure.net/"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureKeyVault1')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureKeyVault",
+                "typeProperties": {
+                    "baseUrl": "[parameters('AzureKeyVault1_properties_typeProperties_baseUrl')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AresMigrationSink')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "parameters": {
+                    "SinkDBName": {
+                        "type": "String",
+                        "defaultValue": "ares_schema_test"
+                    },
+                    "SinkDBServer": {
+                        "type": "string",
+                        "defaultValue": "ares-migration.database.windows.net"
+                    },
+                    "SinkSecretName": {
+                        "type": "string",
+                        "defaultValue": "ares-migration-password"
+                    },
+                    "SinkUser": {
+                        "type": "string",
+                        "defaultValue": "ares@ares-migration"
+                    }
+                },
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": "[parameters('AresMigrationSink_connectionString')]",
+                    "password": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "AzureKeyVault1",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": {
+                            "value": "@linkedService().SinkSecretName",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/MariaDB1')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "MariaDB",
+                "typeProperties": {
+                    "connectionString": "[parameters('MariaDB1_connectionString')]",
+                    "pwd": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "AzureKeyVault1",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "@{linkedService().DBSecret}"
+                    }
+                },
+                "parameters": {
+                    "DBName": {
+                        "type": "String"
+                    },
+                    "DBUser": {
+                        "type": "String"
+                    },
+                    "DBServer": {
+                        "type": "String"
+                    },
+                    "DBSecret": {
+                        "type": "String"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureSchemaTest')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AresMigrationSink",
+                    "type": "LinkedServiceReference",
+                    "parameters": {
+                        "SinkDBName": {
+                            "value": "@dataset().DWDatabaseName",
+                            "type": "Expression"
+                        },
+                        "SinkDBServer": {
+                            "value": "@dataset().DWServer",
+                            "type": "Expression"
+                        },
+                        "SinkSecretName": {
+                            "value": "@dataset().DWSecret",
+                            "type": "Expression"
+                        },
+                        "SinkUser": {
+                            "value": "@dataset().DWUser",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "parameters": {
+                    "DWTableName": {
+                        "type": "String"
+                    },
+                    "DWDatabaseName": {
+                        "type": "String"
+                    },
+                    "DWServer": {
+                        "type": "string"
+                    },
+                    "DWSecret": {
+                        "type": "string"
+                    },
+                    "DWUser": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "typeProperties": {
+                    "tableName": {
+                        "value": "@dataset().DWTableName",
+                        "type": "Expression"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AresMigrationSink')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/MariaDBTable1')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "MariaDB1",
+                    "type": "LinkedServiceReference",
+                    "parameters": {
+                        "DBName": {
+                            "value": "@dataset().DBName",
+                            "type": "Expression"
+                        },
+                        "DBUser": {
+                            "value": "@dataset().DBUser",
+                            "type": "Expression"
+                        },
+                        "DBServer": {
+                            "value": "@dataset().DBServer",
+                            "type": "Expression"
+                        },
+                        "DBSecret": {
+                            "value": "@dataset().DBSecret",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "parameters": {
+                    "DBName": {
+                        "type": "String",
+                        "defaultValue": "usw01-2-ares_pro1"
+                    },
+                    "DBUser": {
+                        "type": "String",
+                        "defaultValue": "mi_admin@mi-ares-prod"
+                    },
+                    "DBServer": {
+                        "type": "String",
+                        "defaultValue": "mi-ares-prod.mariadb.database.azure.com"
+                    },
+                    "DBSecret": {
+                        "type": "String",
+                        "defaultValue": "data-admin"
+                    }
+                },
+                "annotations": [],
+                "type": "MariaDBTable",
+                "typeProperties": {}
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/MariaDB1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/SourceParameterized')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "MariaDB1",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "MariaDBTable",
+                "typeProperties": {}
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/MariaDB1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/sink')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "MariaDB1",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "MariaDBTable",
+                "typeProperties": {}
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/MariaDB1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/IterateAndCopySQLTables')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "ForEach1",
+                        "type": "ForEach",
+                        "dependsOn": [],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@pipeline().parameters.tableList",
+                                "type": "Expression"
+                            },
+                            "activities": [
+                                {
+                                    "name": "copydata",
+                                    "type": "Copy",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "MariaDBSource",
+                                            "query": {
+                                                "value": "SELECT *, '@{utcnow()}' as migration_date, '@{pipeline().parameters.source_db}' as source_db FROM @{item().TABLE_NAME}",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "sink": {
+                                            "type": "SqlSink",
+                                            "writeBatchSize": 10000,
+                                            "preCopyScript": {
+                                                "value": "TRUNCATE TABLE [@{pipeline().parameters.sink_schema}].[@{item().TABLE_NAME}]",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "enableStaging": false
+                                    },
+                                    "inputs": [
+                                        {
+                                            "referenceName": "MariaDBTable1",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "DBName": {
+                                                    "value": "@pipeline().parameters.source_db",
+                                                    "type": "Expression"
+                                                },
+                                                "DBUser": {
+                                                    "value": "@pipeline().parameters.user_db",
+                                                    "type": "Expression"
+                                                },
+                                                "DBServer": {
+                                                    "value": "@pipeline().parameters.server_db",
+                                                    "type": "Expression"
+                                                },
+                                                "DBSecret": {
+                                                    "value": "@pipeline().parameters.secret_db",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "referenceName": "AzureSchemaTest",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "DWTableName": {
+                                                    "value": "[[@{pipeline().parameters.sink_schema}].[@{item().TABLE_NAME}]",
+                                                    "type": "Expression"
+                                                },
+                                                "DWDatabaseName": {
+                                                    "value": "@pipeline().parameters.sink_db",
+                                                    "type": "Expression"
+                                                },
+                                                "DWServer": {
+                                                    "value": "@pipeline().parameters.sink_server",
+                                                    "type": "Expression"
+                                                },
+                                                "DWSecret": {
+                                                    "value": "@pipeline().parameters.sink_secret",
+                                                    "type": "Expression"
+                                                },
+                                                "DWUser": {
+                                                    "value": "@pipeline().parameters.sink_user",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "parameters": {
+                    "tableList": {
+                        "type": "Array"
+                    },
+                    "source_db": {
+                        "type": "String"
+                    },
+                    "server_db": {
+                        "type": "String"
+                    },
+                    "user_db": {
+                        "type": "String"
+                    },
+                    "sink_db": {
+                        "type": "String"
+                    },
+                    "sink_schema": {
+                        "type": "String"
+                    },
+                    "secret_db": {
+                        "type": "String"
+                    },
+                    "sink_server": {
+                        "type": "string"
+                    },
+                    "sink_secret": {
+                        "type": "string"
+                    },
+                    "sink_user": {
+                        "type": "string"
+                    }
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/MariaDBTable1')]",
+                "[concat(variables('factoryId'), '/datasets/AzureSchemaTest')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/CopyDatabase')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "LookupTableList",
+                        "type": "Lookup",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlSource",
+                                "sqlReaderQuery": {
+                                    "value": "@concat('SELECT  TABLE_SCHEMA, TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ''',  pipeline().parameters.sink_schema,''';')",
+                                    "type": "Expression"
+                                }
+                            },
+                            "dataset": {
+                                "referenceName": "AzureSchemaTest",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "DWTableName": "information_schema.TABLES",
+                                    "DWDatabaseName": {
+                                        "value": "@pipeline().parameters.sink_db",
+                                        "type": "Expression"
+                                    },
+                                    "DWServer": {
+                                        "value": "@pipeline().parameters.sink_server",
+                                        "type": "Expression"
+                                    },
+                                    "DWSecret": {
+                                        "value": "@pipeline().parameters.sink_secret",
+                                        "type": "Expression"
+                                    },
+                                    "DWUser": {
+                                        "value": "@pipeline().parameters.sink_user",
+                                        "type": "Expression"
+                                    }
+                                }
+                            },
+                            "firstRowOnly": false
+                        }
+                    },
+                    {
+                        "name": "TriggerCopy",
+                        "type": "ExecutePipeline",
+                        "dependsOn": [
+                            {
+                                "activity": "LookupTableList",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "pipeline": {
+                                "referenceName": "IterateAndCopySQLTables",
+                                "type": "PipelineReference"
+                            },
+                            "waitOnCompletion": true,
+                            "parameters": {
+                                "tableList": {
+                                    "value": "@activity('LookupTableList').output.value",
+                                    "type": "Expression"
+                                },
+                                "source_db": {
+                                    "value": "@pipeline().parameters.source_db",
+                                    "type": "Expression"
+                                },
+                                "server_db": {
+                                    "value": "@pipeline().parameters.server_db",
+                                    "type": "Expression"
+                                },
+                                "user_db": {
+                                    "value": "@pipeline().parameters.user_db",
+                                    "type": "Expression"
+                                },
+                                "sink_db": {
+                                    "value": "@pipeline().parameters.sink_db",
+                                    "type": "Expression"
+                                },
+                                "sink_schema": {
+                                    "value": "@pipeline().parameters.sink_schema",
+                                    "type": "Expression"
+                                },
+                                "secret_db": {
+                                    "value": "@pipeline().parameters.secret_db",
+                                    "type": "Expression"
+                                },
+                                "sink_server": {
+                                    "value": "@pipeline().parameters.sink_server",
+                                    "type": "Expression"
+                                },
+                                "sink_secret": {
+                                    "value": "@pipeline().parameters.sink_secret",
+                                    "type": "Expression"
+                                },
+                                "sink_user": {
+                                    "value": "@pipeline().parameters.sink_user",
+                                    "type": "Expression"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "parameters": {
+                    "source_db": {
+                        "type": "String"
+                    },
+                    "user_db": {
+                        "type": "String"
+                    },
+                    "server_db": {
+                        "type": "String"
+                    },
+                    "sink_db": {
+                        "type": "String"
+                    },
+                    "sink_schema": {
+                        "type": "String"
+                    },
+                    "secret_db": {
+                        "type": "String"
+                    },
+                    "sink_server": {
+                        "type": "string"
+                    },
+                    "sink_secret": {
+                        "type": "string"
+                    },
+                    "sink_user": {
+                        "type": "string"
+                    }
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/AzureSchemaTest')]",
+                "[concat(variables('factoryId'), '/pipelines/IterateAndCopySQLTables')]"
+            ]
+        }
+    ]
+}

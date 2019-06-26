@@ -1,0 +1,47 @@
+{
+	"name": "MariaDBTable1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "MariaDB1",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DBName": {
+					"value": "@dataset().DBName",
+					"type": "Expression"
+				},
+				"DBUser": {
+					"value": "@dataset().DBUser",
+					"type": "Expression"
+				},
+				"DBServer": {
+					"value": "@dataset().DBServer",
+					"type": "Expression"
+				},
+				"DBSecret": {
+					"value": "@dataset().DBSecret",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"DBName": {
+				"type": "String",
+				"defaultValue": "usw01-2-ares_pro1"
+			},
+			"DBUser": {
+				"type": "String",
+				"defaultValue": "mi_admin@mi-ares-prod"
+			},
+			"DBServer": {
+				"type": "String",
+				"defaultValue": "mi-ares-prod.mariadb.database.azure.com"
+			},
+			"DBSecret": {
+				"type": "String",
+				"defaultValue": "data-admin"
+			}
+		},
+		"type": "MariaDBTable"
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,99 @@
+{
+    "name": "GetTableListAndTriggerCopyData",
+    "properties": {
+        "activities": [
+            {
+                "name": "LookupTableList",
+                "description": "Retrieve the table list from MariaDB",
+                "type": "Lookup",
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "MariaDBSource",
+                        "query": {
+                            "value": "SELECT\nq.TABLE_SCHEMA, \nq.TABLE_NAME\nFROM (\nSELECT * \nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_SCHEMA = '@{pipeline().parameters.DBName}'\nand COLUMN_NAME = 'id'\nand TABLE_NAME = 'api_missionsession'\n) q",
+                            "type": "Expression"
+                        }
+                    },
+                    "dataset": {
+                        "referenceName": "SourceParameterized",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "DBName": {
+                                "value": "@pipeline().parameters.DBName",
+                                "type": "Expression"
+                            },
+                            "DBUser": {
+                                "value": "@pipeline().parameters.DBUser",
+                                "type": "Expression"
+                            },
+                            "DBServer": {
+                                "value": "@pipeline().parameters.DBServer",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "TriggerCopy",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "LookupTableList",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "IterateAndCopySQLTables",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "tableList": {
+                            "value": "@activity('LookupTableList').output.value",
+                            "type": "Expression"
+                        },
+                        "dbName": {
+                            "value": "@pipeline().parameters.DBName",
+                            "type": "Expression"
+                        },
+                        "dbUser": {
+                            "value": "@pipeline().parameters.DBUser",
+                            "type": "Expression"
+                        },
+                        "dbServer": {
+                            "value": "@pipeline().parameters.DBServer",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "DBName": {
+                "type": "String",
+                "defaultValue": "usw01-3-ares_titans"
+            },
+            "DBUser": {
+                "type": "String",
+                "defaultValue": "mi_admin@mi-ares-prod"
+            },
+            "DBServer": {
+                "type": "String",
+                "defaultValue": "mi-ares-prod.mariadb.database.azure.com"
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

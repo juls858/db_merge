@@ -1,0 +1,39 @@
+{
+    "name": "SqlServer1",
+    "type": "Microsoft.DataFactory/factories/linkedservices",
+    "properties": {
+        "parameters": {
+            "DBServer": {
+                "type": "String",
+                "defaultValue": "ares-migration.database.windows.net"
+            },
+            "DBName": {
+                "type": "String",
+                "defaultValue": "ares-migration"
+            },
+            "DBUser": {
+                "type": "String",
+                "defaultValue": "ares"
+            },
+            "DBPassKeyVault": {
+                "type": "String",
+                "defaultValue": "ares-migration-password"
+            }
+        },
+        "type": "SqlServer",
+        "typeProperties": {
+            "connectionString": "Integrated Security=False;Data Source=@{linkedService().DBServer};Initial Catalog=@{linkedService().DBName};User ID=@{linkedService().DBUser}",
+            "password": {
+                "type": "AzureKeyVaultSecret",
+                "store": {
+                    "referenceName": "AzureKeyVault1",
+                    "type": "LinkedServiceReference"
+                },
+                "secretName": {
+                    "value": "@linkedService().DBPassKeyVault",
+                    "type": "Expression"
+                }
+            }
+        }
+    }
+}

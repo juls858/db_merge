@@ -1,0 +1,39 @@
+{
+    "name": "SourceParameterized",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "MariaDBParameterized",
+            "type": "LinkedServiceReference",
+            "parameters": {
+                "DBName": {
+                    "value": "@dataset().DBName",
+                    "type": "Expression"
+                },
+                "DBUser": {
+                    "value": "@dataset().DBUser",
+                    "type": "Expression"
+                },
+                "DBServer": {
+                    "value": "@dataset().DBServer",
+                    "type": "Expression"
+                }
+            }
+        },
+        "parameters": {
+            "DBName": {
+                "type": "String",
+                "defaultValue": "usw01-3-ares_titans"
+            },
+            "DBUser": {
+                "type": "String",
+                "defaultValue": "mi_admin@mi-ares-prod"
+            },
+            "DBServer": {
+                "type": "String",
+                "defaultValue": "mi-ares-prod.mariadb.database.azure.com"
+            }
+        },
+        "type": "MariaDBTable"
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

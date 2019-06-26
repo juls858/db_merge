@@ -1,0 +1,102 @@
+{
+    "name": "IterateAndCopySQLTablesSQLServer",
+    "properties": {
+        "activities": [
+            {
+                "name": "IterateSQLTables",
+                "type": "ForEach",
+                "typeProperties": {
+                    "items": {
+                        "value": "@pipeline().parameters.tableList",
+                        "type": "Expression"
+                    },
+                    "activities": [
+                        {
+                            "name": "CopyData",
+                            "type": "Copy",
+                            "policy": {
+                                "timeout": "7.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "source": {
+                                    "type": "SqlSource",
+                                    "sqlReaderQuery": {
+                                        "value": "SELECT * FROM @{item().TABLE_SCHEMA}.@{item().TABLE_NAME}",
+                                        "type": "Expression"
+                                    }
+                                },
+                                "sink": {
+                                    "type": "SqlSink",
+                                    "writeBatchSize": 10000
+                                },
+                                "enableStaging": false
+                            },
+                            "inputs": [
+                                {
+                                    "referenceName": "SourceParameterizedSQLServer",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "DBTable": {
+                                            "value": "@pipeline().parameters.tableList",
+                                            "type": "Expression"
+                                        },
+                                        "DBServer": {
+                                            "value": "@pipeline().parameters.dbServer",
+                                            "type": "Expression"
+                                        },
+                                        "DBName": {
+                                            "value": "@pipeline().parameters.dbName",
+                                            "type": "Expression"
+                                        },
+                                        "DBUser": {
+                                            "value": "@pipeline().parameters.dbUser",
+                                            "type": "Expression"
+                                        },
+                                        "DBPassKeyVault": {
+                                            "value": "@pipeline().parameters.dbPass",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ],
+                            "outputs": [
+                                {
+                                    "referenceName": "Sink",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "DWTableName": {
+                                            "value": "[@{item().TABLE_SCHEMA}].[@{item().TABLE_NAME}]",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "parameters": {
+            "tableList": {
+                "type": "Array"
+            },
+            "dbName": {
+                "type": "String"
+            },
+            "dbUser": {
+                "type": "String"
+            },
+            "dbServer": {
+                "type": "String"
+            },
+            "dbPass": {
+                "type": "String"
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

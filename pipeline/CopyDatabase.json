@@ -1,0 +1,141 @@
+{
+	"name": "CopyDatabase",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupTableList",
+				"type": "Lookup",
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT  TABLE_SCHEMA, TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ''',  pipeline().parameters.sink_schema,''';')",
+							"type": "Expression"
+						}
+					},
+					"dataset": {
+						"referenceName": "AzureSchemaTest",
+						"type": "DatasetReference",
+						"parameters": {
+							"DWTableName": "information_schema.TABLES",
+							"DWDatabaseName": {
+								"value": "@pipeline().parameters.sink_db",
+								"type": "Expression"
+							},
+							"DWServer": {
+								"value": "@pipeline().parameters.sink_server",
+								"type": "Expression"
+							},
+							"DWSecret": {
+								"value": "@pipeline().parameters.sink_secret",
+								"type": "Expression"
+							},
+							"DWUser": {
+								"value": "@pipeline().parameters.sink_user",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "TriggerCopy",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "LookupTableList",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "IterateAndCopySQLTables",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"tableList": {
+							"value": "@activity('LookupTableList').output.value",
+							"type": "Expression"
+						},
+						"source_db": {
+							"value": "@pipeline().parameters.source_db",
+							"type": "Expression"
+						},
+						"server_db": {
+							"value": "@pipeline().parameters.server_db",
+							"type": "Expression"
+						},
+						"user_db": {
+							"value": "@pipeline().parameters.user_db",
+							"type": "Expression"
+						},
+						"sink_db": {
+							"value": "@pipeline().parameters.sink_db",
+							"type": "Expression"
+						},
+						"sink_schema": {
+							"value": "@pipeline().parameters.sink_schema",
+							"type": "Expression"
+						},
+						"secret_db": {
+							"value": "@pipeline().parameters.secret_db",
+							"type": "Expression"
+						},
+						"sink_server": {
+							"value": "@pipeline().parameters.sink_server",
+							"type": "Expression"
+						},
+						"sink_secret": {
+							"value": "@pipeline().parameters.sink_secret",
+							"type": "Expression"
+						},
+						"sink_user": {
+							"value": "@pipeline().parameters.sink_user",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"source_db": {
+				"type": "String"
+			},
+			"user_db": {
+				"type": "String"
+			},
+			"server_db": {
+				"type": "String"
+			},
+			"sink_db": {
+				"type": "String"
+			},
+			"sink_schema": {
+				"type": "String"
+			},
+			"secret_db": {
+				"type": "String"
+			},
+			"sink_server": {
+				"type": "string"
+			},
+			"sink_secret": {
+				"type": "string"
+			},
+			"sink_user": {
+				"type": "string"
+			}
+		}
+	}
+}

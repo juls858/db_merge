@@ -1,0 +1,127 @@
+{
+    "name": "GetTableListAndTriggerCopyDataSQLServer",
+    "properties": {
+        "activities": [
+            {
+                "name": "LookupTableList",
+                "description": "Retrieve the table list from MariaDB",
+                "type": "Lookup",
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "SqlSource",
+                        "sqlReaderQuery": {
+                            "value": "SELECT\nq.TABLE_SCHEMA, \nq.TABLE_NAME\nFROM (\nSELECT * \nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_SCHEMA = '@{pipeline().parameters.TBSchema}'\nand TABLE_NAME = '@{pipeline().parameters.TBName}'\nand COLUMN_NAME = 'id'\n) q",
+                            "type": "Expression"
+                        }
+                    },
+                    "dataset": {
+                        "referenceName": "SourceParameterizedSQLServer",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "DBServer": {
+                                "value": "@pipeline().parameters.DBServer",
+                                "type": "Expression"
+                            },
+                            "DBName": {
+                                "value": "@pipeline().parameters.DBName",
+                                "type": "Expression"
+                            },
+                            "DBUser": {
+                                "value": "@pipeline().parameters.DBUser",
+                                "type": "Expression"
+                            },
+                            "DBPassKeyVault": {
+                                "value": "@pipeline().parameters.DBPassKeyVault",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "TriggerCopy",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "LookupTableList",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "IterateAndCopySQLTablesSQLServer",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "tableList": {
+                            "value": "@activity('LookupTableList').output.value",
+                            "type": "Expression"
+                        },
+                        "dbName": {
+                            "value": "@pipeline().parameters.DBName",
+                            "type": "Expression"
+                        },
+                        "dbUser": {
+                            "value": "@pipeline().parameters.DBUser",
+                            "type": "Expression"
+                        },
+                        "dbServer": {
+                            "value": "@pipeline().parameters.DBServer",
+                            "type": "Expression"
+                        },
+                        "dbPass": {
+                            "value": "@pipeline().parameters.DBPassKeyVault",
+                            "type": "Expression"
+                        },
+                        "tbName": {
+                            "value": "@pipeline().parameters.TBName",
+                            "type": "Expression"
+                        },
+                        "tbSchema": {
+                            "value": "@pipeline().parameters.TBSchema",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "DBName": {
+                "type": "String",
+                "defaultValue": "julius_test"
+            },
+            "DBUser": {
+                "type": "String",
+                "defaultValue": "ares"
+            },
+            "DBServer": {
+                "type": "String",
+                "defaultValue": "ares-migration.database.windows.net"
+            },
+            "DBPassKeyVault": {
+                "type": "String",
+                "defaultValue": "ares-migration-password"
+            },
+            "TBSchema": {
+                "type": "String",
+                "defaultValue": "ares_test"
+            },
+            "TBName": {
+                "type": "String",
+                "defaultValue": "bar"
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

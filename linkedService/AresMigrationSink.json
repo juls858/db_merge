@@ -1,0 +1,39 @@
+{
+	"name": "AresMigrationSink",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"SinkDBName": {
+				"type": "String",
+				"defaultValue": "ares_schema_test"
+			},
+			"SinkDBServer": {
+				"type": "string",
+				"defaultValue": "ares-migration.database.windows.net"
+			},
+			"SinkSecretName": {
+				"type": "string",
+				"defaultValue": "ares-migration-password"
+			},
+			"SinkUser": {
+				"type": "string",
+				"defaultValue": "ares@ares-migration"
+			}
+		},
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=@{linkedService().SinkDBServer};Initial Catalog=@{linkedService().SinkDBName};User ID=@{linkedService().SinkUser}",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVault1",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().SinkSecretName",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

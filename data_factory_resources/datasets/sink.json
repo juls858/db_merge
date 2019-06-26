@@ -1,0 +1,22 @@
+{
+    "name": "Sink",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "AresMigrationSQLServer",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "DWTableName": {
+                "type": "String"
+            }
+        },
+        "type": "SqlServerTable",
+        "typeProperties": {
+            "tableName": {
+                "value": "@dataset().DWTableName",
+                "type": "Expression"
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

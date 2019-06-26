@@ -1,0 +1,11 @@
+{
+    "name": "Source",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "MariaDB1",
+            "type": "LinkedServiceReference"
+        },
+        "type": "MariaDBTable"
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

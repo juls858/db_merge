@@ -1,0 +1,12 @@
+version:                 "3.7"
+
+
+services:
+  db_merge:
+#    image: ubuntu:16.04
+    build: ./docker
+    volumes:
+      - ./src:/src
+    environment:
+      - SOURCE_DATABASE=${sourceDatabase}
+      - MERGE_TARGET_DB=${mergeTargetDB}

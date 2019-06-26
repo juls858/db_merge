@@ -1,0 +1,51 @@
+{
+    "name": "SourceParameterizedSQLServer",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "SqlServer1",
+            "type": "LinkedServiceReference",
+            "parameters": {
+                "DBServer": {
+                    "value": "@dataset().DBServer",
+                    "type": "Expression"
+                },
+                "DBName": {
+                    "value": "@dataset().DBName",
+                    "type": "Expression"
+                },
+                "DBUser": {
+                    "value": "@dataset().DBUser",
+                    "type": "Expression"
+                },
+                "DBPassKeyVault": {
+                    "value": "@dataset().DBPassKeyVault",
+                    "type": "Expression"
+                }
+            }
+        },
+        "parameters": {
+            "DBTable": {
+                "type": "String",
+                "defaultValue": "[usw01-2-ares_pro1].[api_minigame]"
+            },
+            "DBServer": {
+                "type": "String",
+                "defaultValue": "ares-migration.database.windows.net"
+            },
+            "DBName": {
+                "type": "String",
+                "defaultValue": "ares-migration"
+            },
+            "DBUser": {
+                "type": "String",
+                "defaultValue": "ares"
+            },
+            "DBPassKeyVault": {
+                "type": "String",
+                "defaultValue": "ares-migration-password"
+            }
+        },
+        "type": "SqlServerTable"
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

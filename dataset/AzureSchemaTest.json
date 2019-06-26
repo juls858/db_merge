@@ -1,0 +1,51 @@
+{
+	"name": "AzureSchemaTest",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AresMigrationSink",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"SinkDBName": {
+					"value": "@dataset().DWDatabaseName",
+					"type": "Expression"
+				},
+				"SinkDBServer": {
+					"value": "@dataset().DWServer",
+					"type": "Expression"
+				},
+				"SinkSecretName": {
+					"value": "@dataset().DWSecret",
+					"type": "Expression"
+				},
+				"SinkUser": {
+					"value": "@dataset().DWUser",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"DWTableName": {
+				"type": "String"
+			},
+			"DWDatabaseName": {
+				"type": "String"
+			},
+			"DWServer": {
+				"type": "string"
+			},
+			"DWSecret": {
+				"type": "string"
+			},
+			"DWUser": {
+				"type": "string"
+			}
+		},
+		"type": "AzureSqlTable",
+		"typeProperties": {
+			"tableName": {
+				"value": "@dataset().DWTableName",
+				"type": "Expression"
+			}
+		}
+	}
+}

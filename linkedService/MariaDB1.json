@@ -1,0 +1,35 @@
+{
+	"name": "MariaDB1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"type": "MariaDB",
+		"typeProperties": {
+			"connectionString": {
+				"type": "SecureString",
+				"value": "**********"
+			},
+			"pwd": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVault1",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "@{linkedService().DBSecret}"
+			}
+		},
+		"parameters": {
+			"DBName": {
+				"type": "String"
+			},
+			"DBUser": {
+				"type": "String"
+			},
+			"DBServer": {
+				"type": "String"
+			},
+			"DBSecret": {
+				"type": "String"
+			}
+		}
+	}
+}

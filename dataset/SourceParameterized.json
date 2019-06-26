@@ -1,0 +1,10 @@
+{
+	"name": "SourceParameterized",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "MariaDB1",
+			"type": "LinkedServiceReference"
+		},
+		"type": "MariaDBTable"
+	}
+}
